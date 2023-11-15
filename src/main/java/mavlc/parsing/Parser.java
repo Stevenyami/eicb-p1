@@ -52,6 +52,7 @@ public final class Parser {
 		this.tokens = tokens;
 		currentToken = tokens.poll();
 	}
+	public int foo(){return 3;}
 	
 	/**
 	 * Parses the MAVL grammar's start symbol, Module.
