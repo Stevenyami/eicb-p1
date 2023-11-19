@@ -52,7 +52,6 @@ public final class Parser {
 		this.tokens = tokens;
 		currentToken = tokens.poll();
 	}
-
 	
 	/**
 	 * Parses the MAVL grammar's start symbol, Module.
@@ -265,13 +264,23 @@ public final class Parser {
 	}
 	
 	private ValueDefinition parseValueDef() {
-		// TODO implement (task 1.1)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(VAL);
+		TypeSpecifier typespecifier = parseTypeSpecifier();
+		String name = accept(ID);
+		accept(ASSIGN);
+		Expression value = parseExpr();
+		accept(SEMICOLON);
+		return new ValueDefinition(location, typespecifier, name, value);
 	}
 	
 	private VariableDeclaration parseVarDecl() {
-		// TODO implement (task 1.1)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(VAR);
+		TypeSpecifier typespecifier = parseTypeSpecifier();
+		String name = accept(ID);
+		accept(SEMICOLON);
+		return new VariableDeclaration(location, typespecifier, name);
 	}
 	
 	private ReturnStatement parseReturn() {
@@ -285,8 +294,29 @@ public final class Parser {
 	}
 	
 	private VariableAssignment parseAssign(String name, SourceLocation location) {
-		// TODO implement (task 1.1)
-		throw new UnsupportedOperationException();
+		LeftHandIdentifier lhi;  // LeftHandIdentifier / Record-codierung
+		if(currentToken.type == LBRACKET){  // codierung 1.expression
+			accept(LBRACKET);
+			Expression value1 = parseExpr();
+			accept(RBRACKET);
+			if(currentToken.type == LBRACKET){ // codierung 2.expression
+				acceptIt();
+				Expression value2 = parseExpr();
+				accept(RBRACKET);
+				lhi = new MatrixLhsIdentifier(location, name, value1,value2);
+			}else {
+				lhi = new VectorLhsIdentifier(location, name, value1);
+			}
+		}else if (currentToken.type == AT){ // Record-codierung '@' ID
+			acceptIt();
+			String Ident = accept(ID);
+			lhi = new RecordLhsIdentifier(location, name,Ident);
+		}else {
+			lhi = new LeftHandIdentifier(location, name);
+		}
+		accept(ASSIGN);
+		Expression res = parseExpr(); // die zugewiesene Expression
+		return  new VariableAssignment(location, lhi, res);
 	}
 	
 	private CallExpression parseCall(String name, SourceLocation location) {
@@ -398,18 +428,46 @@ public final class Parser {
 	}
 	
 	private Expression parseCompare() {
+		SourceLocation location = currentToken.sourceLocation;
+		Expression compErgeb = parseAddSub();
+		while ((currentToken.type == RANGLE) || (currentToken.type == LANGLE) || (currentToken.type == CMPLE) || (currentToken.type == CMPGE)
+		       || (currentToken.type == EQUAL) || (currentToken.type == NOT_EQUAL)){
+
+		}
 		// TODO implement (task 1.2)
 		throw new UnsupportedOperationException();
 	}
 	
 	private Expression parseAddSub() {
-		// TODO implement (task 1.2)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		Expression Expr= parseMulDiv();
+		// die implementierung muss so lange einen Operand( + / - ) steht geführt werden (wegen der Stern "*" in der Grammatik )
+		while (currentToken.type == ADD || currentToken.type == SUB){
+			if (currentToken.type == ADD){
+				acceptIt();
+				Expr = new Addition(location, Expr, parseMulDiv());
+			} else {
+				acceptIt();
+				Expr = new Subtraction(location, Expr, parseMulDiv());
+			}
+		}
+		return Expr;
 	}
-	
+
 	private Expression parseMulDiv() {
-		// TODO implement (task 1.2)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		Expression muldivErgeb = parseUnaryMinus();
+		// die Operation muss so lange einen Operand( * |  / ) steht geführt werden (wegen der Stern "*" in der Grammatik )
+		while (currentToken.type == MULT || currentToken.type == DIV){
+			if (currentToken.type == MULT){
+				acceptIt();
+				muldivErgeb = new Multiplication(location, muldivErgeb, parseMulDiv());
+			} else {
+				acceptIt();
+				muldivErgeb = new Division(location, muldivErgeb, parseMulDiv());
+			}
+		}
+		return muldivErgeb;
 	}
 	
 	private Expression parseUnaryMinus() {
