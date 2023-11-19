@@ -22,10 +22,7 @@ import mavlc.syntax.record.RecordTypeDeclaration;
 import mavlc.syntax.statement.*;
 import mavlc.syntax.type.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import static mavlc.parsing.Token.TokenType.*;
 import static mavlc.syntax.expression.Compare.Comparison.*;
@@ -172,8 +169,16 @@ public final class Parser {
 	}
 	
 	private IteratorDeclaration parseIteratorDeclaration() {
-		// TODO implement (task 1.5)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		boolean variable = currentToken.type == VAL;
+		if (currentToken.type == VAR || currentToken.type == VAL){
+			acceptIt();
+		}else {
+			throw  new SyntaxError(currentToken,VAR, VAL);
+		}
+		TypeSpecifier type = parseTypeSpecifier();
+		String ident = accept(ID);
+		return new IteratorDeclaration(location, ident, type, variable);
 	}
 	
 	private TypeSpecifier parseTypeSpecifier() {
@@ -325,13 +330,33 @@ public final class Parser {
 	}
 	
 	private ForLoop parseFor() {
-		// TODO implement (task 1.4)
-		 throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(FOR);
+		accept(LPAREN);
+		String ident1 = accept(ID);
+		accept(ASSIGN);
+		Expression expr1 = parseExpr();
+		accept(SEMICOLON);
+		Expression expr2 = parseExpr();
+		accept(SEMICOLON);
+		String ident2 = accept(ID);
+		accept(ASSIGN);
+		Expression expr3 = parseExpr();
+		accept(RPAREN);
+		Statement then = parseStatement();
+		return new ForLoop(location, ident1, expr1, expr2, ident2, expr3, then);
 	}
 	
 	private ForEachLoop parseForEach() {
-		// TODO implement (task 1.5)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(FOREACH);
+		accept(LPAREN);
+		IteratorDeclaration expr1 = parseIteratorDeclaration();
+		accept(COLON);
+		Expression expr2 = parseExpr();
+		accept(RPAREN);
+		Statement then = parseStatement();
+		return new ForEachLoop(location, expr1, expr2, then);
 	}
 	
 	private IfStatement parseIf() {
@@ -416,26 +441,42 @@ public final class Parser {
 	}
 	
 	private Expression parseNot() {
+		//Anwendung von der Methode compare() in der grammatik: Dann ist der zweite Parameter die Methode parseCompare()
 		SourceLocation location = currentToken.sourceLocation;
-		
 		if(currentToken.type == NOT) {
 			acceptIt();
-			// TODO replace null by call to the appropriate parse method (task 1.2)
-			return new Not(location, null);
+			return new Not(location, parseCompare());
 		}
-		// TODO replace null by call to the appropriate parse method (task 1.2)
-		return null;
+		return parseCompare();  // liefert einfach den Aufruf von der entsprechenden Methode zurück
 	}
 	
 	private Expression parseCompare() {
 		SourceLocation location = currentToken.sourceLocation;
 		Expression compErgeb = parseAddSub();
 		while ((currentToken.type == RANGLE) || (currentToken.type == LANGLE) || (currentToken.type == CMPLE) || (currentToken.type == CMPGE)
-		       || (currentToken.type == EQUAL) || (currentToken.type == NOT_EQUAL)){
-
+		       || (currentToken.type == CMPEQ) || (currentToken.type== CMPNE)){
+			if (currentToken.type == RANGLE){
+				acceptIt();
+				compErgeb = new Compare (location, compErgeb, parseAddSub(), GREATER);
+			} else if (currentToken.type == LANGLE) {
+				acceptIt();
+				compErgeb = new Compare(location, compErgeb, parseAddSub(), LESS);
+			} else if (currentToken.type == CMPLE) {
+				acceptIt();
+				compErgeb = new Compare(location, compErgeb , parseAddSub(), LESS_EQUAL);
+			} else if (currentToken.type == CMPGE) {
+				acceptIt();
+				compErgeb = new Compare(location, compErgeb, parseAddSub(), GREATER_EQUAL);
+			} else if (currentToken.type == CMPEQ) {
+				acceptIt();
+				compErgeb = new Compare(location, compErgeb, parseAddSub(), EQUAL);
+			}else {
+				acceptIt();
+				compErgeb = new Compare(location, compErgeb, parseAddSub(), NOT_EQUAL);
+			}
 		}
-		// TODO implement (task 1.2)
-		throw new UnsupportedOperationException();
+		 return compErgeb;
+
 	}
 	
 	private Expression parseAddSub() {
@@ -471,20 +512,23 @@ public final class Parser {
 	}
 	
 	private Expression parseUnaryMinus() {
+		// UnaryMinus benutz die Methode exponentation in der Grammatik, deswegen brauchen wir parseExponentiation() in der implementierung
 		SourceLocation location = currentToken.sourceLocation;
-		
 		if(currentToken.type == SUB) {
 			acceptIt();
-			// TODO replace null by call to the appropriate parse method (task 1.2)
-			return new UnaryMinus(location, null);
+			return new UnaryMinus(location, parseExponentiation());
 		}
-		// TODO replace null by call to the appropriate parse method (task 1.2)
-		return null;
+		return parseExponentiation(); // und liefert einfach den Aufruf von der entsprechenden Methode zurück
 	}
 	
 	private Expression parseExponentiation() {
-		// TODO implement (task 1.2)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		Expression expoErgeb = parseDotProd();
+		while (currentToken.type == EXP){
+			acceptIt();
+			expoErgeb = new Exponentiation(location, expoErgeb, parseDotProd());
+		}
+		return expoErgeb;
 	}
 	
 	private Expression parseDotProd() {
@@ -510,15 +554,13 @@ public final class Parser {
 	}
 	
 	private Expression parseTranspose() {
+		// Anwendung von der Methode dim in der grammatik: Dann ist der zweite Parameter die Methode parseDim()
 		SourceLocation location = currentToken.sourceLocation;
-		
 		if(currentToken.type == TRANSPOSE) {
 			acceptIt();
-			// TODO replace null by call to the appropriate parse method (task 1.2)
-			 return new MatrixTranspose(location, null);
+			 return new MatrixTranspose(location, parseDim());
 		}
-		// TODO replace null by call to the appropriate parse method (task 1.2)
-		return null;
+		return parseDim(); // liefert einfach den Aufruf von der entsprechenden Methode zurück
 	}
 	
 	private Expression parseDim() {
@@ -570,8 +612,16 @@ public final class Parser {
 	}
 	
 	private Expression parseElementSelect() {
-		// TODO implement (task 1.3)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		Expression result= parseRecordElementSelect();
+		accept(ID);
+		while (currentToken.type == LBRACKET){
+			acceptIt();
+			Expression value = parseExpr();
+			accept(RBRACKET);
+			result = new ElementSelect(location, result, parseRecordElementSelect() );
+		}
+		return result;
 	}
 	
 	private Expression parseRecordElementSelect() {
