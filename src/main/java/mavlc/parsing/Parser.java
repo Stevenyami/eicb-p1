@@ -335,7 +335,7 @@ public final class Parser {
 	}
 	
 	private CallExpression parseCall(String name, SourceLocation location) {
-		accept(LPAREN);
+		accept(LPAREN);fdg
 		// TODO implement (task 1.6)
 		throw new UnsupportedOperationException();
 	}
@@ -385,18 +385,45 @@ public final class Parser {
 	}
 	
 	private SwitchStatement parseSwitch() {
-		// TODO implement (task 1.7)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(SWITCH);
+		accept(LPAREN);
+		Expression expr = parseExpr();
+		accept(RPAREN);
+		accept(LBRACE);
+		SwitchSection a;
+		if (a == null && currentToken.type != CASE && currentToken.type != DEFAULT){
+			throw new SyntaxError(currentToken, CASE, DEFAULT);
+		}
+		while (currentToken.type == CASE || currentToken.type == DEFAULT){
+			if (currentToken.type == CASE){
+				a=parseCase();
+			}else {
+				a= parseDefault();
+			}
+		}
+		accept(RBRACE);
+		return new SwitchStatement(location, expr, a);
+
 	}
 	
 	private Case parseCase() {
-		// TODO implement (task 1.7)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(CASE);
+		Expression condition = parseExpr();
+		accept(COLON);
+		Statement stmt = parseStatement();
+		return new Case(location, condition, stmt);
+		kshf
 	}
-	
+
 	private Default parseDefault() {
-		// TODO implement (task 1.7)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(DEFAULT);
+		accept(COLON);
+		Statement stmt = parseStatement();
+		return new Default(location, stmt);
+		jf
 	}
 	
 	private CompoundStatement parseCompound() {
