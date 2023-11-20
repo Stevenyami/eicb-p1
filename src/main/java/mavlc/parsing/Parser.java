@@ -337,18 +337,17 @@ public final class Parser {
 	}
 	
 	private CallExpression parseCall(String name, SourceLocation location) {
+		List<Expression> lst = new ArrayList<>();
 		accept(LPAREN);
-		Expression expr1= parseExpr();
-		if( currentToken.type == ){
+		if( currentToken.type != RPAREN ){
+			 lst.add(parseExpr());
 			while (currentToken.type == COMMA){
-				Expression expr = parseExpr();
+				acceptIt();
+				lst.add(parseExpr());
 			}
 		}
 		accept(RPAREN);
-		return new CallExpression(location, name, parseExpr());
-
-		// TODO implement (task 1.6)
-		throw new UnsupportedOperationException();
+		return new CallExpression(location, name,lst);
 	}
 	
 	private ForLoop parseFor() {
@@ -397,27 +396,26 @@ public final class Parser {
 	
 	private SwitchStatement parseSwitch() {
 		SourceLocation location = currentToken.sourceLocation;
+		List<Case> Cases = new ArrayList<>();
+		List<Default> Defaults = new ArrayList<>();
 		accept(SWITCH);
 		accept(LPAREN);
 		Expression expr = parseExpr();
 		accept(RPAREN);
 		accept(LBRACE);
-		SwitchSection a;
-		if (a == null && currentToken.type != CASE && currentToken.type != DEFAULT){
+		if (currentToken.type != CASE && currentToken.type != DEFAULT){
 			throw new SyntaxError(currentToken, CASE, DEFAULT);
 		}else{
-			while (currentToken.type == CASE || currentToken.type == DEFAULT){
+			while (currentToken.type != RBRACE){
 				if (currentToken.type == CASE){
-					a=parseCase();
-
+					Cases.add(parseCase());
 				}else {
-					a= parseDefault();
-
+					Defaults.add(parseDefault());
 				}
 			}
 		}
 		accept(RBRACE);
-		return new SwitchStatement(location, expr, a);
+		return new SwitchStatement(location, expr, Cases,Defaults);
 	}
 	
 	private Case parseCase() {
@@ -427,7 +425,6 @@ public final class Parser {
 		accept(COLON);
 		Statement stmt = parseStatement();
 		return new Case(location, condition, stmt);
-		kshf
 	}
 
 	private Default parseDefault() {
@@ -436,7 +433,6 @@ public final class Parser {
 		accept(COLON);
 		Statement stmt = parseStatement();
 		return new Default(location, stmt);
-		jf
 	}
 	
 	private CompoundStatement parseCompound() {
