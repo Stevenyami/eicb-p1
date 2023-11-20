@@ -311,24 +311,24 @@ public final class Parser {
 	}
 	
 	private VariableAssignment parseAssign(String name, SourceLocation location) {
-		LeftHandIdentifier lhi;  // LeftHandIdentifier: Record / Matri
+		LeftHandIdentifier lhi;  // LeftHandIdentifier: Record / Matrix / Vektor-LhsIdentifier
 		if(currentToken.type == LBRACKET){  // codierung 1.expression
 			accept(LBRACKET);
 			Expression value1 = parseExpr();
 			accept(RBRACKET);
-			if(currentToken.type == LBRACKET){ // codierung 2.expression
+			if(currentToken.type == LBRACKET){ // codierung 2.expression: in dem Fall eine Matrix
 				acceptIt();
 				Expression value2 = parseExpr();
 				accept(RBRACKET);
 				lhi = new MatrixLhsIdentifier(location, name, value1,value2);
-			}else {
+			}else { // sonst trigen wir ein Vektor
 				lhi = new VectorLhsIdentifier(location, name, value1);
 			}
-		}else if (currentToken.type == AT){ // Record-codierung '@' ID
+		}else if (currentToken.type == AT){ // Record-codierung '@' ID: wenn es um keine Matrix und keinen Vektor handelt
 			acceptIt();
 			String Ident = accept(ID);
 			lhi = new RecordLhsIdentifier(location, name,Ident);
-		}else {
+		}else { // Ansonsten ist lhi einfach ein LHIdentifier
 			lhi = new LeftHandIdentifier(location, name);
 		}
 		accept(ASSIGN);
@@ -337,7 +337,16 @@ public final class Parser {
 	}
 	
 	private CallExpression parseCall(String name, SourceLocation location) {
-		accept(LPAREN);fdg
+		accept(LPAREN);
+		Expression expr1= parseExpr();
+		if( currentToken.type == ){
+			while (currentToken.type == COMMA){
+				Expression expr = parseExpr();
+			}
+		}
+		accept(RPAREN);
+		return new CallExpression(location, name, parseExpr());
+
 		// TODO implement (task 1.6)
 		throw new UnsupportedOperationException();
 	}
@@ -396,17 +405,19 @@ public final class Parser {
 		SwitchSection a;
 		if (a == null && currentToken.type != CASE && currentToken.type != DEFAULT){
 			throw new SyntaxError(currentToken, CASE, DEFAULT);
-		}
-		while (currentToken.type == CASE || currentToken.type == DEFAULT){
-			if (currentToken.type == CASE){
-				a=parseCase();
-			}else {
-				a= parseDefault();
+		}else{
+			while (currentToken.type == CASE || currentToken.type == DEFAULT){
+				if (currentToken.type == CASE){
+					a=parseCase();
+
+				}else {
+					a= parseDefault();
+
+				}
 			}
 		}
 		accept(RBRACE);
 		return new SwitchStatement(location, expr, a);
-
 	}
 	
 	private Case parseCase() {
