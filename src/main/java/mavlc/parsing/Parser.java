@@ -160,18 +160,18 @@ public final class Parser {
 			default:
 				throw new SyntaxError(currentToken, VAL, VAR);
 		}
-		
+
 		TypeSpecifier typeSpecifier = parseTypeSpecifier();
 		String name = accept(ID);
 		accept(SEMICOLON);
-		
+
 		return new RecordElementDeclaration(location, isVariable, typeSpecifier, name);
 	}
 	
 	private IteratorDeclaration parseIteratorDeclaration() {
 		SourceLocation location = currentToken.sourceLocation;
-		boolean variable = currentToken.type == VAL;
-		if (currentToken.type == VAR || currentToken.type == VAL){
+		boolean variable = currentToken.type == VAR;
+		if (variable || currentToken.type == VAL){
 			acceptIt();
 		}else {
 			throw  new SyntaxError(currentToken,VAR, VAL);
@@ -289,13 +289,23 @@ public final class Parser {
 	}
 	
 	private ReturnStatement parseReturn() {
-		// TODO implement (task 1.6)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation;
+		accept(RETURN);
+		Expression returnValue = parseExpr();
+		accept(SEMICOLON);
+		return  new ReturnStatement(location, returnValue);
 	}
 	
 	private Statement parseAssignOrCall() {
-		// TODO implement (task 1.6)
-		throw new UnsupportedOperationException();
+		SourceLocation location = currentToken.sourceLocation; // damit er besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
+		String ident = accept(ID);
+		if (currentToken.type == LBRACKET || currentToken.type == AT || currentToken.type == ASSIGN ){
+			return  parseAssign(ident, location);
+		} else if ( currentToken.type == LPAREN){
+			return  new CallStatement(location,parseCall(ident, location)); // muss noch ein CallStatement enstehen da der eigentlich statement kein Rückgabewert hat aber die Methode schon
+		}else {
+			throw new SyntaxError(currentToken, LBRACKET, AT, ASSIGN, LPAREN);
+		}
 	}
 	
 	private VariableAssignment parseAssign(String name, SourceLocation location) {
@@ -325,6 +335,7 @@ public final class Parser {
 	}
 	
 	private CallExpression parseCall(String name, SourceLocation location) {
+		accept(LPAREN);
 		// TODO implement (task 1.6)
 		throw new UnsupportedOperationException();
 	}
@@ -613,13 +624,12 @@ public final class Parser {
 	
 	private Expression parseElementSelect() {
 		SourceLocation location = currentToken.sourceLocation;
-		Expression result= parseRecordElementSelect();
-		accept(ID);
+		Expression result = parseRecordElementSelect();
 		while (currentToken.type == LBRACKET){
 			acceptIt();
 			Expression value = parseExpr();
 			accept(RBRACKET);
-			result = new ElementSelect(location, result, parseRecordElementSelect() );
+			result= new ElementSelect(location, result, value);
 		}
 		return result;
 	}
