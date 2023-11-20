@@ -27,11 +27,12 @@ import java.util.*;
 import static mavlc.parsing.Token.TokenType.*;
 import static mavlc.syntax.expression.Compare.Comparison.*;
 
-/* TODO enter group information
- *
- * EiCB group number: ...
+/**
+ * EiCB group number: 040
  * Names and matriculation numbers of all group members:
- * ...
+ * Julian von Hammel (2972165)
+ * Nil Sila Ulucan (2378251)
+ * Nyami Gochui Steve Jordi (2756527)
  */
 
 /**
@@ -299,12 +300,17 @@ public final class Parser {
 	}
 	
 	private Statement parseAssignOrCall() {
+		Statement result;
 		SourceLocation location = currentToken.sourceLocation; // damit er besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
 		String ident = accept(ID);
 		if (currentToken.type == LBRACKET || currentToken.type == AT || currentToken.type == ASSIGN ){
-			return  parseAssign(ident, location);
+			result = parseAssign(ident, location);
+			accept(SEMICOLON);
+			return result;
 		} else if ( currentToken.type == LPAREN){
-			return  new CallStatement(location,parseCall(ident, location)); // muss noch ein CallStatement enstehen da der eigentlich statement kein Rückgabewert hat aber die Methode schon
+			CallExpression a = parseCall(ident, location);
+			accept(SEMICOLON);
+			return new CallStatement(location, a); // muss noch ein CallStatement enstehen da der eigentlich statement kein Rückgabewert hat aber die Methode schon
 		}else {
 			throw new SyntaxError(currentToken, LBRACKET, AT, ASSIGN, LPAREN);
 		}
@@ -396,26 +402,22 @@ public final class Parser {
 	
 	private SwitchStatement parseSwitch() {
 		SourceLocation location = currentToken.sourceLocation;
-		List<Case> Cases = new ArrayList<>();
-		List<Default> Defaults = new ArrayList<>();
+		List<Case> cases = new ArrayList<>();
+		List<Default> defaults = new ArrayList<>();
 		accept(SWITCH);
 		accept(LPAREN);
 		Expression expr = parseExpr();
 		accept(RPAREN);
 		accept(LBRACE);
-		if (currentToken.type != CASE && currentToken.type != DEFAULT){
-			throw new SyntaxError(currentToken, CASE, DEFAULT);
-		}else{
-			while (currentToken.type != RBRACE){
-				if (currentToken.type == CASE){
-					Cases.add(parseCase());
-				}else {
-					Defaults.add(parseDefault());
-				}
+		while(currentToken.type == CASE || currentToken.type == DEFAULT){
+			if ( currentToken.type == CASE){
+				cases.add(parseCase());
+			}else{
+				defaults.add(parseDefault());
 			}
 		}
 		accept(RBRACE);
-		return new SwitchStatement(location, expr, Cases,Defaults);
+		return new SwitchStatement(location,expr, cases, defaults);
 	}
 	
 	private Case parseCase() {
