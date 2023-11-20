@@ -271,9 +271,10 @@ public final class Parser {
 	private ValueDefinition parseValueDef() {
 		SourceLocation location = currentToken.sourceLocation;
 		accept(VAL);
+		// implementierung der Logik der Grammatik
 		TypeSpecifier typespecifier = parseTypeSpecifier();
-		String name = accept(ID);
-		accept(ASSIGN);
+		String name = accept(ID);// ID
+		accept(ASSIGN); //
 		Expression value = parseExpr();
 		accept(SEMICOLON);
 		return new ValueDefinition(location, typespecifier, name, value);
@@ -281,6 +282,7 @@ public final class Parser {
 	
 	private VariableDeclaration parseVarDecl() {
 		SourceLocation location = currentToken.sourceLocation;
+		// codierung der Logik der Grammatik
 		accept(VAR);
 		TypeSpecifier typespecifier = parseTypeSpecifier();
 		String name = accept(ID);
@@ -309,7 +311,7 @@ public final class Parser {
 	}
 	
 	private VariableAssignment parseAssign(String name, SourceLocation location) {
-		LeftHandIdentifier lhi;  // LeftHandIdentifier / Record-codierung
+		LeftHandIdentifier lhi;  // LeftHandIdentifier: Record / Matri
 		if(currentToken.type == LBRACKET){  // codierung 1.expression
 			accept(LBRACKET);
 			Expression value1 = parseExpr();
@@ -540,10 +542,10 @@ public final class Parser {
 		while (currentToken.type == MULT || currentToken.type == DIV){
 			if (currentToken.type == MULT){
 				acceptIt();
-				muldivErgeb = new Multiplication(location, muldivErgeb, parseMulDiv());
+				muldivErgeb = new Multiplication(location, muldivErgeb,parseUnaryMinus());
 			} else {
 				acceptIt();
-				muldivErgeb = new Division(location, muldivErgeb, parseMulDiv());
+				muldivErgeb = new Division(location, muldivErgeb, parseUnaryMinus());
 			}
 		}
 		return muldivErgeb;
