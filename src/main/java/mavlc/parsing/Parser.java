@@ -129,11 +129,11 @@ public final class Parser {
 	}
 	
 	private RecordTypeDeclaration parseRecordTypeDeclaration() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation; // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
 		
-		accept(RECORD);
-		String name = accept(ID);
-		accept(LBRACE);
+		accept(RECORD); // @
+		String name = accept(ID); // ID
+		accept(LBRACE); // {
 		List<RecordElementDeclaration> elements = new ArrayList<>();
 		// no empty records allowed
 		elements.add(parseRecordElementDeclaration());
@@ -146,7 +146,7 @@ public final class Parser {
 	}
 	
 	private RecordElementDeclaration parseRecordElementDeclaration() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation; // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
 		
 		boolean isVariable;
 		switch(currentToken.type) {
@@ -171,7 +171,7 @@ public final class Parser {
 	
 	private IteratorDeclaration parseIteratorDeclaration() {
 		SourceLocation location = currentToken.sourceLocation;
-		boolean variable = currentToken.type == VAR;
+		boolean variable = currentToken.type == VAR; // Zuweisung von VAR, da VAl eine Konstante ist
 		if (variable || currentToken.type == VAL){
 			acceptIt();
 		}else {
@@ -270,19 +270,19 @@ public final class Parser {
 	}
 	
 	private ValueDefinition parseValueDef() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation;  // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
 		accept(VAL);
 		// implementierung der Logik der Grammatik
 		TypeSpecifier typespecifier = parseTypeSpecifier();
 		String name = accept(ID);// ID
-		accept(ASSIGN); //
-		Expression value = parseExpr();
+		accept(ASSIGN);
+		Expression value = parseExpr(); // Expression
 		accept(SEMICOLON);
 		return new ValueDefinition(location, typespecifier, name, value);
 	}
 	
 	private VariableDeclaration parseVarDecl() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation;  // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
 		// codierung der Logik der Grammatik
 		accept(VAR);
 		TypeSpecifier typespecifier = parseTypeSpecifier();
@@ -292,7 +292,8 @@ public final class Parser {
 	}
 	
 	private ReturnStatement parseReturn() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation;  // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
+		// Implementierung der Logik der Grammatik
 		accept(RETURN);
 		Expression returnValue = parseExpr();
 		accept(SEMICOLON);
@@ -302,6 +303,7 @@ public final class Parser {
 	private Statement parseAssignOrCall() {
 		Statement result;
 		SourceLocation location = currentToken.sourceLocation; // damit er besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
+		// Codierung der Grammatik
 		String ident = accept(ID);
 		if (currentToken.type == LBRACKET || currentToken.type == AT || currentToken.type == ASSIGN ){
 			result = parseAssign(ident, location);
@@ -357,7 +359,8 @@ public final class Parser {
 	}
 	
 	private ForLoop parseFor() {
-		SourceLocation location = currentToken.sourceLocation;
+		SourceLocation location = currentToken.sourceLocation;  // damit das Programm besser Fehler meldung werfen kann. Man weisst genau wo er den Fehler suchen muss
+		// Kodierung der Logik
 		accept(FOR);
 		accept(LPAREN);
 		String ident1 = accept(ID);
@@ -376,6 +379,7 @@ public final class Parser {
 	
 	private ForEachLoop parseForEach() {
 		SourceLocation location = currentToken.sourceLocation;
+		// Kodierung der Logik
 		accept(FOREACH);
 		accept(LPAREN);
 		IteratorDeclaration expr1 = parseIteratorDeclaration();
@@ -388,6 +392,7 @@ public final class Parser {
 	
 	private IfStatement parseIf() {
 		SourceLocation location = currentToken.sourceLocation;
+		// Kodierung der logik
 		accept(IF);
 		accept(LPAREN);
 		Expression test = parseExpr();
@@ -502,6 +507,7 @@ public final class Parser {
 	private Expression parseCompare() {
 		SourceLocation location = currentToken.sourceLocation;
 		Expression compErgeb = parseAddSub();
+		// Kodierung der Logik
 		while ((currentToken.type == RANGLE) || (currentToken.type == LANGLE) || (currentToken.type == CMPLE) || (currentToken.type == CMPGE)
 		       || (currentToken.type == CMPEQ) || (currentToken.type== CMPNE)){
 			if (currentToken.type == RANGLE){
@@ -572,6 +578,7 @@ public final class Parser {
 	
 	private Expression parseExponentiation() {
 		SourceLocation location = currentToken.sourceLocation;
+		// Kodierung der Logik
 		Expression expoErgeb = parseDotProd();
 		while (currentToken.type == EXP){
 			acceptIt();
